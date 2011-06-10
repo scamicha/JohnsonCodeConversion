@@ -1,3 +1,4 @@
+s<-read.delim('/N/hd01/dj4/Quarry/motherload2011.txt')
 ptm <- proc.time()
 s<-subset(s,s$cell==23)
 Unique<-unique(s$sp)
