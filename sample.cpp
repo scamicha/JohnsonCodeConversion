@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
   ifstream input;
   int c=0,b,i,inputsize,unique,subdatasize;
   stack<int> tempstack;
-  int *spuni;
+  int *spuni,*numrows,*seedsum,*treesum;
 
   filename = "sample.input";
   
@@ -87,6 +87,9 @@ int main(int argc, char *argv[])
     }
   
   spuni = new int[unique];
+  numrows = new int[unique];
+  seedsum = new int[unique];
+  treesum = new int[unique];
   
   for(i=0;i<unique;i++)
     {
@@ -94,8 +97,11 @@ int main(int argc, char *argv[])
       tempstack.pop();
     }
 
-  for(i=0;i<unique;i++)
+  for(j=0;j<subdatasize;j++)
     {
+      for(i=0;i<unique;i++)
+	{
+	  
       
 
   
