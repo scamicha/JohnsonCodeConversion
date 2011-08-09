@@ -2,9 +2,7 @@ s<-read.delim('./sample.input')
 ptm <- proc.time()
 s<-subset(s,s$cell==23)
 Unique<-unique(s$sp)
-cat(Unique,"\n")
 n.obs<-length(Unique)
-cat(n.obs,"\n")
 iter<-500
 dbks.out<-rep(NA,n.obs)
 pvalue.out<-rep(NA,n.obs)
@@ -57,13 +55,9 @@ for (k in 1:n.obs){
       }
       dbksr[j]<-max(abs(obsr-expr))
     }
-    cat(dbksr,"\n")
     pvalue.out[k]<-table(factor(dbksr>dbks.out[k],levels=c(T,F)))["TRUE"]/iter
   }
 }
-cat(dbks.out,"\n")
-cat(pvalue.out,"\n")
-
 label<-as.character(Unique)
 twodksout<-cbind(label,dbks.out,pvalue.out)
 proc.time() - ptm
