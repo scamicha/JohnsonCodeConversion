@@ -5,12 +5,13 @@
 #include <stdio.h>
 #include <sstream>
 #include <stack>
+#include <iomanip>
+#include <math.h>
 
+const int iter=500;
 const int minrows=30;
 const int selectcell=23;
-
-template<typename T, int size>
-int GetArrLength(T(&)[size]){return size;}
+long int idum = 0;
 
 using namespace std;
 struct sample {
@@ -22,23 +23,37 @@ struct sample {
   int cell;
 };
 
-void sift_down(sample &, const int, const int);
-void hpsort(sample &);
+void sift_down(sample [], const int, const int);
+void hpsort(sample []);
+int *randgen(int);
+double ran1();
+float runif(float,float);
 
 
 int main(int argc, char *argv[])
 {
 
-  sample *inputdata, *subdata;
-  string filename,inputstring,substring;
+  string filename = "sample.input";
+  string outfile = "2DKSCell23.txt.c";
+  sample *inputdata=NULL;
+  sample *subdata=NULL;
+  string inputstring,substring;
   ifstream input;
-  int c=0,b,i,inputsize,unique,subdatasize;
+  ofstream output;
+  int c=0,b,i,inputsize,unique,subdatasize,unistart,uniend;
+  int treesize,treesize1,x,y,j,k,l,yr,treesum,seedsum;
   stack<int> tempstack;
-  int *spuni,*numrows,*seedsum,*treesum;
+  int *spuni=NULL;
+  int *seed=NULL;
+  int *tree=NULL;
+  int *randsel=NULL;
+  int *seedran=NULL;
+  int *spused=NULL;
+  float q[4],eq[4],xdum[2],ydum[2];
+  float *dbks=NULL;
+  float *pvalue=NULL;
+  float *dbksran=NULL;
 
-  filename = "sample.input";
-  
-  //START GETFILE FUNCTION
   FILE *f=fopen(filename.c_str(),"rb");
   while((b=fgetc(f))!=EOF) c+=(b==10)?1:0;
   fclose(f);
@@ -75,6 +90,8 @@ int main(int argc, char *argv[])
   }
   
   delete [] inputdata;
+  inputdata=NULL;
+  input.close();
 
   subdatasize = i;
   hpsort(subdata);
@@ -82,44 +99,184 @@ int main(int argc, char *argv[])
   unique = 1;
   for(i=1;i<subdatasize;i++)
     {
-      if(subdata[i].sp!=subdata[i-1].sp) unique++;
-      tempstack.push(subdata[i].sp);
+      if(subdata[i].sp!=subdata[i-1].sp){
+	unique++;
+	tempstack.push(subdata[i].sp);
+      }
     }
   
-  spuni = new int[unique];
-  numrows = new int[unique];
-  seedsum = new int[unique];
-  treesum = new int[unique];
+  spuni   = new int[unique];
+  dbks    = new float[unique];
+  pvalue  = new float[unique];
+  spused  = new int[unique];
+  dbksran = new float[iter]; 
   
   for(i=0;i<unique;i++)
     {
       spuni[i] = tempstack.top();
       tempstack.pop();
+      dbks[i] = 0.0;
+      pvalue[i] = 0.0;
+      spused[i] = 0;
     }
+ 
+  for(i=0;i<unique/2;i++)
+    swap(spuni[i],spuni[unique-1-i]);
 
-  for(j=0;j<subdatasize;j++)
-    {
-      for(i=0;i<unique;i++)
+  c=0;
+
+  for(i=0;i<unique;i++){
+      for(j=0;j<iter;j++)
+	dbksran[j] = 0.0;
+      unistart=c;
+      while(c<subdatasize-1)
+	if (subdata[c].sp == subdata[c+1].sp)
+	  c++;
+	else
+	  break;
+      c++;
+      uniend=c;
+      treesize = uniend-unistart;
+      if (treesize < minrows)
+	continue;
+      seedran = new int[treesize];
+      seed    = new int[treesize];
+      tree    = new int[treesize];
+      
+      b=0;
+      for(j=unistart;j<uniend;j++)
 	{
-	  
+	  seed[b] = subdata[j].seed;
+	  tree[b] = subdata[j].tree;
+	  b++;
+	}
+      treesum = 0;
+      seedsum = 0;
+      for(j=0;j<treesize;j++){
+	treesum += tree[j];
+	seedsum += seed[j];
+      }
       
-
-  
+      if (treesum == 0 || seedsum == 0){
+	delete [] seedran;
+	seedran=NULL;
+	delete [] seed;
+	seed=NULL;
+	delete [] tree;
+	tree=NULL;
+	continue;
+      }
+      spused[i] = 1;
       
+      for(j=0;j<treesize;j++)
+	{
+	  x = tree[j];
+	  y = seed[j];
+	  for(k=0;k<4;k++){
+	    q[k]=0.0;
+	    eq[k]=0.0;
+	  }
+	  for(k=0;k<2;k++){
+	    xdum[k]=0.0;
+	    ydum[k]=0.0;
+	  }
 
+	  for(k=0;k<treesize;k++)
+	    {
+	      if(tree[k]>x && seed[k]>=y) q[0]+=1.0;
+	      if(tree[k]<=x && seed[k]>=y) q[1]+=1.0;
+	      if(tree[k]<=x && seed[k]<y) q[2]+=1.0;
+	      if(tree[k]>x && seed[k]<y) q[3]+=1.0;
+	      if(tree[k]>x){
+		xdum[0]+=1.0;
+	      }else xdum[1]+=1.0;
+	      if(seed[k]>=y){
+		ydum[0]+=1.0;
+	      }else ydum[1]+=1.0;
+	    }
+	  eq[0] = xdum[0]*ydum[0]/(treesize*treesize);
+	  eq[1] = xdum[1]*ydum[0]/(treesize*treesize);
+	  eq[2] = xdum[1]*ydum[1]/(treesize*treesize);
+	  eq[3] = xdum[0]*ydum[1]/(treesize*treesize);
+	  for(k=0;k<4;k++){
+	    q[k] /= treesize;
+	    if(fabs(q[k]-eq[k]) > dbks[i]) 
+	      dbks[i] = fabs(q[k]-eq[k]);
+	  }
+	}    
+    
+      for(l=0;l<iter;l++){
+	randsel = randgen(treesize);
+	for(j=0;j<treesize;j++)
+	  seedran[j] = seed[randsel[j]];
+	for(j=0;j<treesize;j++)
+	  {
+	    x = tree[j];
+	    yr = seedran[j];
+	    for(k=0;k<4;k++){
+	      q[k]=0.0;
+	      eq[k]=0.0;
+	    }
+	    for(k=0;k<2;k++){
+	      xdum[k]=0.0;
+	      ydum[k]=0.0;
+	    }
+	    
+	    for(k=0;k<treesize;k++)
+	      {
+		if(tree[k]>x && seedran[k]>=yr) q[0]+=1.0;
+		if(tree[k]<=x && seedran[k]>=yr) q[1]+=1.0;
+		if(tree[k]<=x && seedran[k]<yr) q[2]+=1.0;
+		if(tree[k]>x && seedran[k]<yr) q[3]+=1.0;
+		if(tree[k]>x){
+		  xdum[0]+=1.0;
+		}else xdum[1]+=1.0;
+		if(seedran[k]>=yr){
+		  ydum[0]+=1.0;
+		}else ydum[1]+=1.0;
+	      }
+	    eq[0] = xdum[0]*ydum[0]/(treesize*treesize);
+	    eq[1] = xdum[1]*ydum[0]/(treesize*treesize);
+	    eq[2] = xdum[1]*ydum[1]/(treesize*treesize);
+	    eq[3] = xdum[0]*ydum[1]/(treesize*treesize);
+	    for(k=0;k<4;k++){
+	      q[k] /= treesize;
+	      if(fabs(q[k]-eq[k]) > dbksran[l]) 
+		dbksran[l] = fabs(q[k]-eq[k]);
+	    }
+	  }
+	delete [] randsel;
+	randsel=NULL;
+      }
+
+      for(l=0;l<iter;l++)
+	if(dbksran[l]>dbks[i]) pvalue[i]+=1.0;
+      pvalue[i] /= iter;
+
+      delete [] seedran;
+      seedran=NULL;
+      delete [] seed;
+      seed=NULL;
+      delete [] tree;
+      tree=NULL;
+  }
   
-
-  //FILE GOTTEN
-
-  
-
-
-  
+  output.open(outfile.c_str());
+  output <<fixed<<setprecision(8);
+  output <<setw(7)<<"label"<<setw(12)<<"dbks"<<setw(12)<<"pvalue"<<endl;
+  for(i=0;i<unique;i++){
+    output <<setw(7)<<spuni[i];
+    if(spused[i] == 0)
+      output <<setw(12)<<"NA"<<setw(12)<<"NA"<<endl;
+    else
+      output <<setw(12)<<dbks[i]<<setw(12)<<pvalue[i]<<endl;
+  }
+  output.close();
 
   return 0;
 }
   
-void sift_down(sample &tosort, const int l, const int r)
+void sift_down(sample tosort[], const int l, const int r)
 {
   int j, jold;
   sample a;
@@ -137,14 +294,90 @@ void sift_down(sample &tosort, const int l, const int r)
   tosort[jold]=a;
 }
 
-void hpsort(sample &tosort)
+void hpsort(sample tosort[])
 {
-  int i;
-  int n = GetArrLength(tosort);
-  for (i=n/2-1; i>=0; i--) sift_down(tosort, i n-1);
-  for (i=n-1; i>0, i--){
-    SWAP(tosort[0],tosort[i]);
+  int i,n;
+  n = sizeof(tosort)/sizeof(*tosort);
+  for (i=n/2-1; i>=0; i--) sift_down(tosort, i, n-1);
+  for (i=n-1; i>0; i--){
+    swap(tosort[0],tosort[i]);
     sift_down(tosort,0,i-1);
   }
 }
+
+int *randgen(int length)
+{
+  int *arr;
+  int randnum,j;
+  arr = new int[length];
+  arr[0] = 0;
+  for(j=1;j<length;j++){
+    randnum = (int) runif(0,j); 
+    arr[j] = arr[randnum];
+    arr[randnum] = j;
+  }
+
+  return arr; 
   
+}
+
+/* A function that uses ran1 to generate a random number between min and max (inclusive).
+   Can be called as many times as ran1 will allow. Probably something like 100e6.*/      
+float runif(float min, float max)
+{
+
+  double rannum,interval;
+
+  if(idum == 0){
+    int temp = (unsigned int) time( NULL );
+    idum = -temp;
+  }
+
+  if(idum == 0){
+    cout << "idum == 0, not safe to call ran1!\n";
+    exit(1);
+  }else{
+    rannum = ran1();
+  }
+  interval = max - min;
+  interval += 6.0e-15;
+  rannum = min + (rannum*interval)-3.0e-15;
+  if(rannum < min){ return min;
+  }else if(rannum > max){ return max;
+  }else{ return rannum;
+  }
+}
+
+/* Random number generator from Numerical Recipes in C++ page 284*/
+
+double ran1()
+{
+
+  const int IA=16807,IM=2147483647,IQ=127773,IR=2836,NTAB=32;
+  const int NDIV=(1+(IM-1)/NTAB);
+  const double EPS=3.0e-16,AM=1.0/IM,RNMX=(1.0-EPS);
+  static int iy=0;
+  static int iv[NTAB];
+  int j,k;
+  double temp;
+
+  if(idum<=0||!iy){
+    if(-idum<1) idum=1;
+    else idum=-idum;
+    for(j=NTAB+7;j>=0;j--){
+      k=idum/IQ;
+      idum=IA*(idum-k*IQ)-IR*k;
+      if(idum<0)idum += IM;
+      if(j<NTAB)iv[j]=idum;
+    }
+    iy=iv[0];
+  }
+  k=idum/IQ;
+  idum=IA*(idum-k*IQ)-IR*k;
+  if(idum<0)idum += IM;
+  j=iy/NDIV;
+  iy=iv[j];
+  iv[j]=idum;
+  if((temp=AM*iy)>RNMX) return RNMX;
+  else return temp;
+}

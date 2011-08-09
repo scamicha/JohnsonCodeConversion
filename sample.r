@@ -1,9 +1,11 @@
-s<-read.delim('/N/hd01/dj4/Quarry/motherload2011.txt')
+s<-read.delim('./sample.input')
 ptm <- proc.time()
 s<-subset(s,s$cell==23)
 Unique<-unique(s$sp)
+cat(Unique,"\n")
 n.obs<-length(Unique)
-iter<-5000
+cat(n.obs,"\n")
+iter<-500
 dbks.out<-rep(NA,n.obs)
 pvalue.out<-rep(NA,n.obs)
 #The Loop
@@ -30,7 +32,9 @@ for (k in 1:n.obs){
       eq4<-table(factor(x>x0,levels=c(F,T)))["TRUE"]/n*table(factor(y<y0,levels=c(F,T)))["TRUE"]/n
       exp[i,]<-cbind(eq1,eq2,eq3,eq4)
     }
+ 
     dbks.out[k]<-max(abs(obs-exp))
+
 #Data Randomization (Distribution of Dbks)
     obsr<-matrix(NA,n,4)
     expr<-matrix(NA,n,4)
@@ -53,9 +57,13 @@ for (k in 1:n.obs){
       }
       dbksr[j]<-max(abs(obsr-expr))
     }
+    cat(dbksr,"\n")
     pvalue.out[k]<-table(factor(dbksr>dbks.out[k],levels=c(T,F)))["TRUE"]/iter
   }
 }
+cat(dbks.out,"\n")
+cat(pvalue.out,"\n")
+
 label<-as.character(Unique)
 twodksout<-cbind(label,dbks.out,pvalue.out)
 proc.time() - ptm

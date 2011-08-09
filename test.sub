@@ -1,8 +1,0 @@
-#PBS -k o
-#PBS -o output
-#PBS -l nodes=1:ppn=4,cput=12:00:00,walltime=12:00:00
-#PBS -M dj4@indiana.edu
-#PBS -m abe 
-#PBS -N cell23
-#PBS -j oe
-R CMD BATCH /N/u/dj4/Quarry/2DKScell23.r output23.out

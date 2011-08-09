@@ -1,0 +1,33 @@
+Daniel Johnson R code to C++ conversion Final report:
+
+
+Timings:
+
+The following timings are for my laptop a mid-2010 MacBook Pro (see http://support.apple.com/kb/SP582 for details)
+Relevant parameters include:
+  Processor Name:	Intel Core i5
+  Processor Speed:	2.4 GHz
+  Number Of Processors:	1
+  Total Number Of Cores:	2
+  L2 Cache (per core):	256 KB
+  L3 Cache:	3 MB
+  Memory:	4 GB
+  Processor Interconnect Speed:	4.8 GT/s
+
+Memory Slots:
+
+BANK 0/DIMM0:
+  Size:	2 GB
+  Type:	DDR3
+  Speed:	1067 MHz
+
+BANK 1/DIMM0:
+  Size:	2 GB
+  Type:	DDR3
+  Speed:	1067 MHz
+
+scamicha@bumblebee|2:24pm> /usr/bin/time ./test > test.out.c
+        0.10 real         0.09 user         0.00 sys
+
+scamicha@bumblebee|1:39pm> /usr/bin/time R --vanilla < sample.R > test.out.r
+      964.53 real       956.96 user         6.96 sys
