@@ -1,5 +1,25 @@
 Daniel Johnson R code to C++ conversion Final report:
 
+Daniel Johnson (dj4@indiana.edu), a graduate student in the Clay lab of the Biology department, is researching
+interactions and cross-correlations of trees in a various data sets. I began by understanding the code and
+what the R functions accomplished. I then rewrote the code in C++. The C++ functions identically to the R code
+except for the fact that the math is all single precision. I was unable to determine what precision R
+typically uses. So it may be identical if R uses single precision.
+
+The C++ code must be compiled. The tests included below in the timing section were compiled with the GNU
+compiler using the compile line:
+
+% g++ -O3 -o <executable name> corr.cpp
+
+The code requires two input arguments. The first is the input data set, which should be formated as
+sample.input (the sample data set provided by Daniel), and the output file to be written. An optional third
+argument is the number of iterations to use in generating random samples. The default is 5000, which takes
+about a second to run on a 2.4GHz MacBook Pro. 
+
+It should be noted that if much larger data sets are used, or very high numbers of iterations are required,
+there is some room for improvement in the performance of the code. The code could be threaded to make use of
+all of the cores present on a machine. In the case of Quarry this would be 8 cores, which could potentially
+result in a speed-up factor of 8. At this time I felt the performance gains achieved should be acceptable for now.
 
 Timings:
 

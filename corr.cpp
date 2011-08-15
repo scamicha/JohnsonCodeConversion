@@ -1,4 +1,18 @@
-/* A program to test cross-correlations. Written in OpenMP parallel C++. Scott Michael.*/
+/* A program to test cross-correlations. Written in C++ by Scott Michael. Converted from an R
+ code provided by Daniel Johnson. The code takes as input a file containing the data plot, sp,
+ tree, ba, seed, and cell in column format. Input and output files are specified in the
+ source. In addition, the number of random iterations, the cell ofinterest and the minimum
+ number of sp's to consider are specified in the source.
+
+ compile this code by: g++ -O3 -o <executable name> sample.cpp
+
+ The executable takes two required arguments and one optional argument and will only write
+ errors to STDOUT. These errors can be thrown by the random number generator. The arguments
+ are the input file, the output file, and optionally the number of iterations. The code is
+ single precision and will only generate a few million random numbers. i.e. Don't set 
+ iter > 10e6 without a rewrite of runif and ran1.*/
+
+//header includes
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -8,12 +22,19 @@
 #include <iomanip>
 #include <math.h>
 
-const int iter=500;
+using namespace std;
+
+// These are parameters that can be changed by the user. Changing them requires the code to be
+// recompiled. Iter can be entered at the command line if desired without recompilation. If it
+// is not present then it defaults to the value here.
+int iter = 5000;
 const int minrows=30;
 const int selectcell=23;
+// End user modifiable parameters.
+
 long int idum = 0;
 
-using namespace std;
+// Struct to hold input data.
 struct sample {
   float plot;
   float ba;
@@ -23,21 +44,24 @@ struct sample {
   int cell;
 };
 
-void sift_down(sample [], const int, const int);
-void hpsort(sample []);
-int *randgen(int);
-double ran1();
-float runif(float,float);
+// Functions at the end of the source.
+void sift_down(sample [], const int, const int);  // Used to sort input data by sp 
+void hpsort(sample []);   // Function to sort data by sp
+int *randgen(int);        // Generates an array of random integers
+double ran1();            // Random number generator
+float runif(float,float); // Random number generator
 
 
 int main(int argc, char *argv[])
 {
 
-  string filename = "sample.input";
-  string outfile = "2DKSCell23.txt.c";
   sample *inputdata=NULL;
   sample *subdata=NULL;
-  string inputstring,substring;
+  string inputstring,substring,filename,outfile;
+  if(argc != 3 && argc != 4){
+    cout << "Incorrect number of inputs. Aborting." << endl;
+    return 1;
+  }
   ifstream input;
   ofstream output;
   int c=0,b,i,inputsize,unique,subdatasize,unistart,uniend;
@@ -54,15 +78,23 @@ int main(int argc, char *argv[])
   float *pvalue=NULL;
   float *dbksran=NULL;
 
-  FILE *f=fopen(filename.c_str(),"rb");
-  while((b=fgetc(f))!=EOF) c+=(b==10)?1:0;
-  fclose(f);
+  input.open(argv[1],ios::in);
+  output.open(argv[2],ios::out);
+  if (argc == 4) iter = atoi(argv[3]);
+
+  c=0;
+  while(!input.eof()){
+    getline(input,inputstring);
+    c++;
+  }
+  c--;
+  input.clear();
+  input.seekg(0, ios::beg);  
   
   inputsize = c;
   inputdata = new sample[inputsize];
   c=0;
-    
-  input.open(filename.c_str());
+ 
   getline(input, inputstring);
   while(getline(input, inputstring)){
     istringstream iss(inputstring);
@@ -261,7 +293,6 @@ int main(int argc, char *argv[])
       tree=NULL;
   }
   
-  output.open(outfile.c_str());
   output <<fixed<<setprecision(8);
   output <<setw(7)<<"label"<<setw(12)<<"dbks"<<setw(12)<<"pvalue"<<endl;
   for(i=0;i<unique;i++){
@@ -275,7 +306,8 @@ int main(int argc, char *argv[])
 
   return 0;
 }
-  
+
+// Helper function to the sort function. Sorts down an individual entry. From Numerical Recipes.  
 void sift_down(sample tosort[], const int l, const int r)
 {
   int j, jold;
@@ -294,6 +326,7 @@ void sift_down(sample tosort[], const int l, const int r)
   tosort[jold]=a;
 }
 
+// Sorting function, from Numerical Recipes.
 void hpsort(sample tosort[])
 {
   int i,n;
@@ -305,6 +338,8 @@ void hpsort(sample tosort[])
   }
 }
 
+// Function that will generate an array of integers randomly ordered and containing the numbers
+// from 0 to arraysize-1.
 int *randgen(int length)
 {
   int *arr;
