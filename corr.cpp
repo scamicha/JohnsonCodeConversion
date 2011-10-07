@@ -29,7 +29,6 @@ using namespace std;
 // is not present then it defaults to the value here.
 int iter = 5000;
 const int minrows=30;
-const int selectcell=23;
 // End user modifiable parameters.
 
 long int idum = 0;
@@ -115,10 +114,8 @@ int main(int argc, char *argv[])
   subdata = new sample[i];
   i=0;
   for(c=0;c<inputsize-1;c++){
-    if(inputdata[c].cell == selectcell){
       subdata[i] = inputdata[c];
       i++;
-    }
   }
   
   delete [] inputdata;
